@@ -1,69 +1,30 @@
 <?php
 
     session_start();
+    include_once './env.php';
 
-    $sqluser = "user";
-    $sqlpassword = "password";
-
-    /*
-    Replace user and password above with your sql server user and password.
-    if you have not created an user, run sql server in shell as root user and enter:
-    
-    CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
-
-    GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';
-
-    FLUSH PRIVILEGES;
-    
-    You can replace user and password with your desired username and password.
-    */
-
-    $sqldatabase = "login";
-
-    /*
-    for this page to work you have to create a database named login and a table named list in your mysql server.
-    To do this, enter following in your mysql server:
-
-    CREATE DATABASE login;
-
-    USE login;
-
-    CREATE TABLE list(
-        id int not null auto_increment,
-        user_name varchar(255) not null,
-        first_name varchar(255) not null,
-        last_name varchar(255) not null,
-        email varchar(255) not null,
-        password varchar(255) not null,
-        PRIMARY KEY (id)
-    );
-
-    keep 'login' and 'list' and all field names in lowercase, otherwise, it won't work.
-    */
 
     $post = $_SERVER['REQUEST_METHOD']=='POST';
     if ($post) {
-        if(
-            empty($_POST['uname'])||
-            empty($_POST['pass'])
-        ) $empty_fields = true;
-
+        if( empty($_POST['uname'])|| empty($_POST['pass'])) { 
+            $empty_fields = true;
+        }
         else {
                 try {
-                    $pdo = new PDO("mysql:host=localhost;dbname=".$sqldatabase,$sqluser,$sqlpassword);
+                    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=".$sqldatabase,$sqluser,$sqlpassword);
                     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 } catch (PDOException $e) {
-                    exit($e->getMessage());
+                    exit("mysql:host=localhost;dbname=".$sqldatabase.$sqluser.$sqlpassword." ".$e->getMessage());
                 }
-                $st = $pdo->prepare('SELECT * FROM list WHERE user_name=?');
+                $st = $pdo->prepare('SELECT * FROM '.$sqlusertable.' WHERE user_name=?');
                 $st->execute(array($_POST['uname']));
-                $r=$st->fetch();
-                if($r != null && $r["password"]==$_POST['pass']) {
+                $dbReponse=$st->fetch();
+                if($dbReponse != null && $dbReponse["password"]==$_POST['pass']) {
                     echo $_POST["uname"];
                     echo $_POST["pass"];
                     $_SESSION["uname"] = $_POST["uname"];
                     $_SESSION["pass"] = $_POST["pass"];
-                    $_SESSION["fname"] = $r["first_name"];
+                    $_SESSION["fname"] = $dbReponse["first_name"];
                     echo $_SESSION["uname"];
                     echo $_SESSION["pass"];
                     header("Location:success.php");
@@ -136,8 +97,15 @@
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
     <p>Login</p>
     <?php 
-    echo 'Username<br><input type="text" name="uname" value="'.$_POST['uname'].'" placeholder="Username"><br>';
-    echo '<br>Password<br><input type="password" name="pass" value="'.$_POST['pass'].'" placeholder="Password"><br>';
+    $uName='';
+    if(isset($_POST['uname']))
+        $uName=$_POST['uname'];
+    $uPass='';
+        if(isset($_POST['pass']))
+            $uPass=$_POST['pass'];
+    
+    echo 'Username<br><input type="text" name="uname" value="'.$uName.'" placeholder="Username"><br>';
+    echo '<br>Password<br><input type="password" name="pass" value="'.$uPass.'" placeholder="Password"><br>';
     if(!empty($login_err)&&$login_err) echo "<span>Incorrect Username or password.</span>";
     if(!empty($empty_fields)&&$empty_fields) echo "<span>Enter username and password.</span>";
     ?>

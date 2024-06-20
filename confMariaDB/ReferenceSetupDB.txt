@@ -1,0 +1,32 @@
+-- ---------------------
+--  DB
+-- ---------------------
+
+DROP DATABASE IF EXISTS `{{DB_NAME}}`;
+CREATE DATABASE IF NOT EXISTS `{{DB_NAME}}`;
+
+ALTER DATABASE `{{DB_NAME}}` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `{{DB_NAME}}`;
+
+-- ---------------------
+-- user d'acces a la DB
+-- ---------------------
+
+CREATE OR REPLACE USER {{USER_NAME}}@'localhost' IDENTIFIED BY '{{USER_PWD}}' PASSWORD EXPIRE NEVER;
+GRANT ALL PRIVILEGES ON `{{DB_NAME}}`.* TO {{USER_NAME}}@'localhost';
+FLUSH PRIVILEGES;
+
+-- ---------------------
+-- Table des users
+-- ---------------------
+
+DROP DATABASE IF EXISTS `{{USER_TABLE}}`;
+CREATE TABLE {{USER_TABLE}} (
+    id int not null auto_increment,
+    user_name varchar(255) not null,
+    first_name varchar(255) not null,
+    last_name varchar(255) not null,
+    email varchar(255) not null,
+    password varchar(255) not null,
+    PRIMARY KEY (id)
+);

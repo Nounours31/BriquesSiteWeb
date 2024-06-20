@@ -1,0 +1,6 @@
+{
+    "DB_NAME" : "proto_db_name",
+    "USER_NAME" : "proto_user_name",
+    "USER_PWD" : "proto_user_pwd",
+    "USER_TABLE" : "proto_table_user_name"
+}

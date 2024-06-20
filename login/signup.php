@@ -1,56 +1,14 @@
 <?php
 
     session_start();
-    $sqluser = "user";
-    $sqlpassword = "password";
-
-    /*
-    Replace user and password above with your sql server user and password.
-    if you have not created an user, run sql server in shell as root user and enter:
-    
-    CREATE USER 'user'@'localhost' IDENTIFIED BY 'password';
-
-    GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';
-
-    FLUSH PRIVILEGES;
-    
-    You can replace user and password with your desired username and password.
-    */
-
-    $sqldatabase = "login";
-
-    /*
-    for this page to work you have to create a database named login and a table named list in your mysql server.
-    To do this, enter following in your mysql server:
-
-    CREATE DATABASE login;
-
-    USE login;
-
-    CREATE TABLE list(
-        id int not null auto_increment,
-        user_name varchar(255) not null,
-        first_name varchar(255) not null,
-        last_name varchar(255) not null,
-        email varchar(255) not null,
-        password varchar(255) not null,
-        PRIMARY KEY (id)
-    );
-
-    keep 'login' and 'list' and all field names in lowercase, otherwise, it won't work.
-    */
+    include_once './env.php';
 
     $post = $_SERVER['REQUEST_METHOD']=='POST';
 
     if ($post) {
-        if(
-            empty($_POST['uname'])||
-            empty($_POST['fname'])||
-            empty($_POST['lname'])||
-            empty($_POST['email'])||
-            empty($_POST['pass'])||
-            empty($_POST['repass'])
-        ) $empty_fields = true;
+        $empty_fields=false;
+        if (empty($_POST['uname']) || empty($_POST['fname']) || empty($_POST['lname']) || empty($_POST['email']) || empty($_POST['pass']) || empty($_POST['repass'])) 
+            $empty_fields = true;
 
         else {
             $unmatch = preg_match('/^[A-Za-z][A-Za-z0-9_]{3,}$/', $_POST['uname']);
@@ -61,19 +19,19 @@
             $peq = $_POST['pass']==$_POST['repass'];
             if($unmatch&&$fnmatch&&$lnmatch&&$emmatch&&$pmatch&&$peq) {
                 try {
-                    $pdo = new PDO("mysql:host=localhost;dbname=".$sqldatabase,$sqluser,$sqlpassword);
+                    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=".$sqldatabase,$sqluser,$sqlpassword);
                     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 } catch (PDOException $e) {
                     exit($e->getMessage());
                 }
-                $st = $pdo->prepare('SELECT * FROM list WHERE user_name=?');
+                $st = $pdo->prepare('SELECT * FROM '.$sqlusertable.' WHERE user_name=?');
                 $st->execute(array($_POST['uname']));
                 $uname_err = $st->fetch() != null;
-                $st = $pdo->prepare('SELECT * FROM list WHERE email=?');
+                $st = $pdo->prepare('SELECT * FROM '.$sqlusertable.' WHERE email=?');
                 $st->execute(array($_POST['email']));
                 $email_err = $st->fetch() != null;
                 if(!$uname_err&&!$email_err) {
-                    $stmt = 'INSERT INTO list(user_name,first_name,last_name,email,password) VALUES (?,?,?,?,?)';
+                    $stmt = 'INSERT INTO '.$sqlusertable.'(user_name,first_name,last_name,email,password) VALUES (?,?,?,?,?)';
                     $pdo->prepare($stmt)->execute(array(
                         $_POST['uname'],
                         $_POST['fname'],
@@ -155,13 +113,26 @@
 <form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>">
     <p>SignUp</p>
     <?php
-    echo 'Username<br><input type="text" name="uname" value="'.$_POST['uname'].'" placeholder="Username"><br>';
+        $uName='';
+        if(isset($_POST['uname']))
+            $uName=$_POST['uname'];
+            $fName='';
+            if(isset($_POST['fname']))
+                    $fName=$_POST['fname'];
+                    $lName='';
+                    if(isset($_POST['lname']))
+                            $lName=$_POST['lname'];
+                        $eMail='';
+        if(isset($_POST['email']))
+            $eMail=$_POST['email'];
+        
+    echo 'Username<br><input type="text" name="uname" value="'.$uName.'" placeholder="Username"><br>';
     if($post&&!$empty_fields&&!$unmatch) echo '<span>Username can contain alphabet letters, numbers and underscore(_), but must begin with a letter. It must be at least 4 character long.<br></span>';
     if(!empty($uname_err)&&$uname_err) echo '<span>Username taken. Try another username.</span>';
-    echo '<br>Name<br><input type="text" name="fname" value="'.$_POST['fname'].'" placeholder="First Name"><br>';
-    echo '<input type="text" name="lname" value="'.$_POST['lname'].'" placeholder="Last Name"><br>';
+    echo '<br>Name<br><input type="text" name="fname" value="'.$fName.'" placeholder="First Name"><br>';
+    echo '<input type="text" name="lname" value="'.$lName.'" placeholder="Last Name"><br>';
     if($post&&!$empty_fields&&!($lnmatch&&$fnmatch)) echo '<span>Name can only contain alphabet letters.<br></span>';
-    echo '<br>E-mail<br><input type="text" name="email" value="'.$_POST['email'].'" placeholder="email@example.com"><br>';
+    echo '<br>E-mail<br><input type="text" name="email" value="'.$eMail.'" placeholder="email@example.com"><br>';
     if(!empty($email_err)&&$email_err) echo '<span>Email already registered. Enter another email.</span>';
     if($post&&!$empty_fields&&!$emmatch) echo '<span>Email must be of format example@site.domain<br></span>';
     echo '<br>Password<br><input type="password" name="pass" placeholder="Password"><br>';

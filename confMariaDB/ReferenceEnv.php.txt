@@ -1,0 +1,6 @@
+<?php
+    $sqluser = "{{USER_NAME}}";
+    $sqlpassword = "{{USER_PWD}}";
+    $sqldatabase = "{{DB_NAME}}";
+    $sqlusertable = "{{USER_TABLE}}";
+?>
